@@ -1,4 +1,4 @@
-# Tournament Prize Distribution DApp
+# Tournament Prize Distribution Contract
 
 ## 📌 Project Title
 **Tournament Prize Distribution Smart Contract**
