@@ -7,6 +7,7 @@ contract TournamentPrize {
     bool public prizeDistributed;
 
     mapping(address => uint256) public winnerShares;
+    address[] public winners;
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not authorized");
@@ -24,9 +25,9 @@ contract TournamentPrize {
     }
 
     // Set winners and distribute prizes
-    function distributePrizes(address[] calldata winners, uint256[] calldata percentages) external onlyOwner {
+    function distributePrizes(address[] calldata _winners, uint256[] calldata percentages) external onlyOwner {
         require(!prizeDistributed, "Prizes already distributed");
-        require(winners.length == percentages.length, "Input length mismatch");
+        require(_winners.length == percentages.length, "Input length mismatch");
 
         uint256 totalPercent;
         for (uint256 i = 0; i < percentages.length; i++) {
@@ -34,10 +35,11 @@ contract TournamentPrize {
         }
         require(totalPercent == 100, "Total percentage must equal 100");
 
-        for (uint256 i = 0; i < winners.length; i++) {
+        for (uint256 i = 0; i < _winners.length; i++) {
             uint256 prize = (totalPrizePool * percentages[i]) / 100;
-            winnerShares[winners[i]] = prize;
-            payable(winners[i]).transfer(prize);
+            winnerShares[_winners[i]] = prize;
+            payable(_winners[i]).transfer(prize);
+            winners.push(_winners[i]);
         }
 
         prizeDistributed = true;
@@ -46,5 +48,25 @@ contract TournamentPrize {
     // View individual winner share
     function getWinnerShare(address winner) external view returns (uint256) {
         return winnerShares[winner];
+    }
+
+    // NEW: Withdraw unclaimed or leftover funds
+    function withdrawUnclaimedFunds() external onlyOwner {
+        require(prizeDistributed, "Distribute prizes first");
+        uint256 contractBalance = address(this).balance;
+        require(contractBalance > 0, "No funds to withdraw");
+        payable(owner).transfer(contractBalance);
+    }
+
+    // NEW: Reset the contract for next tournament
+    function resetTournament() external onlyOwner {
+        require(prizeDistributed, "Previous tournament not finished");
+
+        for (uint256 i = 0; i < winners.length; i++) {
+            delete winnerShares[winners[i]];
+        }
+        delete winners;
+        totalPrizePool = 0;
+        prizeDistributed = false;
     }
 }
