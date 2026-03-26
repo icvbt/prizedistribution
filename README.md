@@ -1,4 +1,4 @@
-# Tournament Prize Distribution Contract
+# Tournament Prize Distribution Contract With Solana
 
 ## 📌 Project Title
 **Tournament Prize Distribution Smart Contract**
